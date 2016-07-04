@@ -13,18 +13,18 @@ namespace dbproxy
 class DBProxyServer
 {
 public:
-	static DBProxyServer* Instance();
-	void Start(int listen_port);
+    static DBProxyServer* Instance();
+    void Start(int listen_port);
 
-	uv_tcp_t* CreateClient();
-	redisAsyncContext* GetRedisContext(const std::string& player_id);
-	sql::Connection* GetMysqlConnection(const std::string& player_id);
-	uv_loop_t* Loop(){return loop_;};
+    uv_tcp_t* CreateClient();
+    redisAsyncContext* GetRedisContext(const std::string& player_id);
+    sql::Connection* GetMysqlConnection(const std::string& player_id);
+    uv_loop_t* Loop(){return loop_;};
 private:
-	DBProxyServer():server_handle_(NULL),loop_(NULL),redis_async_context_(NULL){};
-	uv_tcp_t *server_handle_;
-	uv_loop_t *loop_;
-	redisAsyncContext *redis_async_context_;
+    DBProxyServer():server_handle_(NULL),loop_(NULL),redis_async_context_(NULL){};
+    uv_tcp_t *server_handle_;
+    uv_loop_t *loop_;
+    redisAsyncContext *redis_async_context_;
 };
 
 }
