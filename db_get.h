@@ -8,7 +8,7 @@
 namespace dbproxy
 {
 class Client;
-
+class Message;
 struct DBGetCommand
 {
     enum MYSQL_QUERY_RET{
@@ -19,15 +19,17 @@ struct DBGetCommand
     };
 
     Client* client;
+    uint32_t sn;
     std::string player_id;
     std::string prop_name;
     MYSQL_QUERY_RET query_result;
     std::string prop_value;
+    DBGetCommand():client(NULL),sn(0),player_id(""),prop_name(""),prop_value(""),query_result(INIT){};
 };
 
 class DBGet{
 public:
-    static void Process(DBGetCommand *context);
+    static void Process(Message *message,Client* client);
     static void GetRedisCallback(redisAsyncContext *c, void *reply, void *privdata);
     static void SetRedisCallback(redisAsyncContext *c, void *reply, void *privdata);
     static void QueryMysql(uv_work_t *work_handle);

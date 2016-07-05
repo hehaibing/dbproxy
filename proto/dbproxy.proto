@@ -1,0 +1,17 @@
+package dbproxy;
+
+enum Command {
+    CMD_GET_REQ = 100;
+    CMD_GET_RESP = 101;
+}
+
+message GetReq {
+    required string player_id = 1;
+    required string prop_name = 2;
+}
+
+message GetResp {
+    required int32 ret_code = 1;//0表示成功，其他表示失败
+    optional bytes data = 2;
+    optional string error_message = 3;
+}

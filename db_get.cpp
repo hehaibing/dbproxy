@@ -10,12 +10,20 @@
 #include "db_get.h"
 #include "client.h"
 #include "db_proxy_server.h"
+#include "proto/dbproxy.pb.h"
 
 namespace dbproxy
 {
 
-void DBGet::Process(DBGetCommand *command){
-    printf("get from redis\n");
+void DBGet::Process(Message *message,Client *client){
+    fprintf(stdout, "process message\n");
+    GetReq req;
+    req.ParseFromString(std::string(message->content,message->head.content_len));
+    DBGetCommand* command = new DBGetCommand();
+    command->client = client;
+    command->sn = message->head.sn;
+    command->player_id = req.player_id();
+    command->prop_name = req.prop_name();
     redisAsyncContext* redis_context = DBProxyServer::Instance()->GetRedisContext(command->player_id);
     redisAsyncCommand(redis_context,DBGet::GetRedisCallback,command,
         "hget %s %s",command->player_id.c_str(),command->prop_name.c_str());
@@ -29,7 +37,12 @@ void DBGet::GetRedisCallback(redisAsyncContext *context, void *reply, void *priv
     }
     
     if(redis_replay->type == REDIS_REPLY_STRING){
-        command->client->Response(std::string(redis_replay->str,redis_replay->len));
+        GetResp resp;
+        resp.set_ret_code(0);
+        resp.set_data(std::string(redis_replay->str,redis_replay->len));
+        std::string serialData;
+        resp.SerializeToString(&serialData);
+        command->client->Response(CMD_GET_RESP,command->sn,serialData);
         return;
     }
 
@@ -78,6 +91,7 @@ void DBGet::QueryMysqlCallback(uv_work_t* work_handle, int status){
         return;
     }
 
+    GetResp resp;
     if(command->query_result == DBGetCommand::FOUNDED){
         redisAsyncContext* redis_context = DBProxyServer::Instance()->GetRedisContext(command->player_id);
         redisAsyncCommand(redis_context,DBGet::SetRedisCallback,command,
@@ -86,12 +100,19 @@ void DBGet::QueryMysqlCallback(uv_work_t* work_handle, int status){
             command->prop_name.c_str(),
             command->prop_value.c_str(),
             command->prop_value.length());
-        command->client->Response(command->prop_value);
+        resp.set_ret_code(0);
+        resp.set_data(command->prop_value);
     }else if(command->query_result == DBGetCommand::NOT_FOUNDED){
-        command->client->Response("not found in db");
+        resp.set_ret_code(-1);
+        resp.set_error_message("can not find in the database");
     }else{
-        command->client->Response("query db failed");
+        resp.set_ret_code(-2);
+        resp.set_error_message("query database failed");
     }
+
+    std::string serialData;
+    resp.SerializeToString(&serialData);
+    command->client->Response(CMD_GET_RESP,command->sn,serialData);
     free(work_handle);
 }
 }

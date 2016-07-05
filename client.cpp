@@ -28,21 +28,17 @@ void Client::Init(uv_tcp_t* handle){
 }
 
 void Client::ProcessReaded(){
-    if(alread_readed_num_ <= 2){
+    if(alread_readed_num_ < sizeof(MessageHeader)){
         return;
     }
-    //uint16_t input_msg_len = ntohs(*(uint16_t*)read_buf_);
-    uint16_t input_msg_len = (uint16_t)strtol(read_buf_,NULL,10);
-    if(alread_readed_num_ < input_msg_len+2){
+    Message* msg = (Message*)read_buf_;
+    uint32_t input_msg_len = ntohl(msg->head.content_len);
+    if(alread_readed_num_ < input_msg_len + sizeof(MessageHeader)){
         return;
     }
-
-    DBGetCommand* command = new DBGetCommand();
-    command->client = this;
-    command->player_id = std::string(read_buf_+2,alread_readed_num_-2);
-    command->prop_name = "basic";
+    msg->head.content_len = input_msg_len;
+    DBGet::Process(msg,this);
     alread_readed_num_ = 0;
-    DBGet::Process(command);
 }
 
 void Client::AllocReadBuffer(size_t suggested_size, uv_buf_t* buf){
@@ -84,6 +80,14 @@ void Client::OnAllocReadBuffer(uv_handle_t *handle, size_t suggested_size, uv_bu
 }
 
 void Client::ReadCallback(uv_stream_t *client_handle, ssize_t read_num, const uv_buf_t *buf){
+    if(read_num < 0){
+        if(read_num != UV_EOF){
+            fprintf(stderr, "read error, %s\n", uv_strerror(read_num));
+        }
+        uv_close((uv_handle_t*)client_handle,NULL);
+        return;
+    }
+
     Client* client = (Client*)client_handle->data;
     client->alread_readed_num_ += read_num;
     client->ProcessReaded();
@@ -96,15 +100,17 @@ void Client::WriteCallback(uv_write_t* req, int status){
     }
 }
 
-void Client::Response(const std::string& content){
-
-    char* write_buf = (char*)malloc(content.length()+2);
-    *(uint16_t*)write_buf = htons((uint16_t)content.length());
-    memcpy(write_buf+2,content.c_str(),content.length());
+void Client::Response(uint8_t cmd, uint32_t sn, const std::string& content){
+    uint32_t msg_len = content.length()+sizeof(MessageHeader);
+    Message* msg = (Message*)malloc(msg_len);
+    msg->head.content_len = htonl(content.length());
+    msg->head.sn = sn;
+    msg->head.cmd = cmd;
+    memcpy(msg->content,content.c_str(),content.length());
 
     uv_write_t* write_req = (uv_write_t*)malloc(sizeof(uv_write_t));
-    write_req->data = write_buf;
-    uv_buf_t buf = uv_buf_init(write_buf,content.length()+2);
+    write_req->data = msg;
+    uv_buf_t buf = uv_buf_init((char*)msg,msg_len);
     uv_write(write_req,(uv_stream_t*)handle_,&buf,1,Client::WriteCallback);
 }
 }
