@@ -3,7 +3,24 @@ package dbproxy;
 enum Command {
     CMD_GET_REQ = 100;
     CMD_GET_RESP = 101;
+    CMD_SET_REQ = 102;
+    CMD_SET_RESP = 103;
+    CMD_DEL_REQ = 104;
+    CMD_DEL_RESP = 105;
 }
+
+enum ErrorCode{
+    ERR_MESSAGE_FORMAT = 100;//消息报文格式不正确
+    ERR_DB_EXCEPTION = 101;//数据库异常
+    ERR_GET_NOT_FOUND = 200;//查找不到对应的记录
+}
+
+message PackageHead {
+    required uint32 content_length = 1;//内容长度，不包括消息头长度(网络字节序)
+    required uint32 sn = 2;//请求序列号，返回响应时会带上此序列号
+    required uint32 cmd = 3;//消息类型
+}
+
 
 message GetReq {
     required string player_id = 1;
@@ -14,4 +31,25 @@ message GetResp {
     required int32 ret_code = 1;//0表示成功，其他表示失败
     optional bytes data = 2;
     optional string error_message = 3;
+}
+
+message SetReq {
+    required string player_id = 1;
+    required string prop_name = 2;
+    required string prop_value = 3;
+}
+
+message SetResp {
+    required int32 ret_code = 1;
+    optional string error_message = 2;
+}
+
+message DelReq {
+    required string player_id = 1;
+    required string prop_name = 2;
+}
+
+message DelResp {
+    required int32 ret_code = 1;
+    optional string error_message = 2;
 }

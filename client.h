@@ -10,7 +10,7 @@ struct MessageHeader
 {
     uint32_t content_len;
     uint32_t sn;
-    uint8_t  cmd;
+    uint32_t cmd;
 };
 
 struct  Message
@@ -22,9 +22,10 @@ struct  Message
 class Client{
 public:
     Client();
+    virtual ~Client();
     void Init(uv_tcp_t* handle);
     void ProcessReaded();
-    void Response(uint8_t cmd, uint32_t sn, const std::string& content);
+    void Response(uint32_t cmd, uint32_t sn, const std::string& content);
 
     void AllocReadBuffer(size_t suggested_size, uv_buf_t* buf);
     uv_stream_t* GetHandle(){   return (uv_stream_t*)handle_;};
@@ -33,6 +34,7 @@ public:
     static void OnAllocReadBuffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf);
     static void ReadCallback(uv_stream_t *client, ssize_t read_num, const uv_buf_t *buf);
     static void WriteCallback(uv_write_t* req, int status);
+    static void CloseCallback(uv_handle_t *handle);
 
 private:
     uv_tcp_t* handle_;

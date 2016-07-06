@@ -43,6 +43,7 @@ void DBGet::GetRedisCallback(redisAsyncContext *context, void *reply, void *priv
         std::string serialData;
         resp.SerializeToString(&serialData);
         command->client->Response(CMD_GET_RESP,command->sn,serialData);
+        delete command;
         return;
     }
 
@@ -114,5 +115,6 @@ void DBGet::QueryMysqlCallback(uv_work_t* work_handle, int status){
     resp.SerializeToString(&serialData);
     command->client->Response(CMD_GET_RESP,command->sn,serialData);
     free(work_handle);
+    delete command;
 }
 }

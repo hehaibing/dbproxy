@@ -9,12 +9,21 @@
 namespace dbproxy{
 
 const int READ_BUF_LEN = 1024;
+const uint32_t MAX_READ_BUF_LEN = 1024*1024;
 
 Client::Client()
     :handle_(NULL)
     ,read_buf_(NULL)
     ,read_buf_len_(0)
     ,alread_readed_num_(0){
+}
+
+Client::~Client(){
+    if(read_buf_ != NULL){
+        free(read_buf_);
+        read_buf_ = NULL;
+        alread_readed_num_ = 0;
+    }
 }
 
 void Client::Init(uv_tcp_t* handle){
@@ -33,6 +42,13 @@ void Client::ProcessReaded(){
     }
     Message* msg = (Message*)read_buf_;
     uint32_t input_msg_len = ntohl(msg->head.content_len);
+    
+    if(input_msg_len > MAX_READ_BUF_LEN){
+        handle_->data = this;
+        uv_close((uv_handle_t*)handle_,Client::CloseCallback);
+        return;
+    }
+
     if(alread_readed_num_ < input_msg_len + sizeof(MessageHeader)){
         return;
     }
@@ -62,15 +78,13 @@ void Client::OnNewConnection(uv_stream_t* server, int status){
 
     uv_tcp_t *client_handle = DBProxyServer::Instance()->CreateClient();
     if (uv_accept(server, (uv_stream_t*) client_handle) == 0) {
-        fprintf(stdout,"Accept new client\n");
         Client* client = new Client();
         client->Init(client_handle);
         client_handle->data = client;
         uv_read_start((uv_stream_t*) client_handle, Client::OnAllocReadBuffer,Client::ReadCallback);
     }
     else {
-        fprintf(stderr,"Accept client error\n");
-        uv_close((uv_handle_t*) client_handle, NULL);
+        uv_close((uv_handle_t*) client_handle, Client::CloseCallback);
     }
 }
 
@@ -84,7 +98,7 @@ void Client::ReadCallback(uv_stream_t *client_handle, ssize_t read_num, const uv
         if(read_num != UV_EOF){
             fprintf(stderr, "read error, %s\n", uv_strerror(read_num));
         }
-        uv_close((uv_handle_t*)client_handle,NULL);
+        uv_close((uv_handle_t*)client_handle,Client::CloseCallback);
         return;
     }
 
@@ -100,7 +114,7 @@ void Client::WriteCallback(uv_write_t* req, int status){
     }
 }
 
-void Client::Response(uint8_t cmd, uint32_t sn, const std::string& content){
+void Client::Response(uint32_t cmd, uint32_t sn, const std::string& content){
     uint32_t msg_len = content.length()+sizeof(MessageHeader);
     Message* msg = (Message*)malloc(msg_len);
     msg->head.content_len = htonl(content.length());
@@ -113,4 +127,13 @@ void Client::Response(uint8_t cmd, uint32_t sn, const std::string& content){
     uv_buf_t buf = uv_buf_init((char*)msg,msg_len);
     uv_write(write_req,(uv_stream_t*)handle_,&buf,1,Client::WriteCallback);
 }
+
+void Client::CloseCallback(uv_handle_t* handle){
+    if(handle->data != NULL){
+        Client* client = (Client*)handle->data;
+        delete client;
+    }
+    free(handle);
+}
+
 }
