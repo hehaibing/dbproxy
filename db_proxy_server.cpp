@@ -15,26 +15,20 @@ DBProxyServer::~DBProxyServer(){
         free(server_handle_);
         server_handle_ = NULL;
     }
+
+    uv_mutex_lock(&mutex_); 
+    for(std::list<sql::Connection*>::iterator it = mysql_connections_.begin();
+        it != mysql_connections_.end();it++){
+        delete *it;
+    }
+    mysql_connections_.clear();
+    uv_mutex_unlock(&mutex_);    
 }
 
-void handle_signal_int(uv_signal_t* handle, int signum){
-    uv_signal_stop(handle);
-    uv_close((uv_handle_t*)handle, NULL);
+void handle_signal_int(uv_signal_t* signal_handle, int signum){
+    uv_signal_stop(signal_handle);
+    uv_close((uv_handle_t*)signal_handle, NULL);
     DBProxyServer::Instance()->Stop();
-}
-
-static void walk_cb(uv_handle_t* handle, void* arg){
-    printf("handle type is %d\n", handle->type);
-}
-
-static void close_cb(uv_handle_t* handle) {
-    printf("close callback execute\n");
-    uv_walk(uv_default_loop(),walk_cb,NULL);
-}
-
-static void shutdown_cb(uv_shutdown_t* req, int status) {
-    printf("shutdown callback\n");
-    uv_close((uv_handle_t*)req->data, close_cb);
 }
 
 void DBProxyServer::Stop(){
@@ -46,6 +40,7 @@ void DBProxyServer::Stop(){
 }
 
 void DBProxyServer::Start(int listen_port){
+    uv_mutex_init(&mutex_);
     loop_ = uv_default_loop();
     int key_create_ret = uv_key_create(&g_mysql_connection_key);
 
@@ -88,13 +83,24 @@ sql::Connection* DBProxyServer::GetMysqlConnection(const std::string& player_id)
     if(conn !=  NULL){
         return conn;
     }
+
     try{
         sql::Driver* driver = get_driver_instance();
-        conn = driver->connect("tcp://127.0.0.1:3306/dbproxy","root","root");
-        uv_key_set(&g_mysql_connection_key,conn);       
+        sql::ConnectOptionsMap connection_properties;
+        connection_properties ["hostName"] = sql::SQLString("127.0.0.1");      
+        connection_properties ["userName"] = sql::SQLString("root");
+        connection_properties ["password"] = sql::SQLString("root");
+        connection_properties ["schema"] = sql::SQLString("dbproxy");
+        connection_properties ["OPT_RECONNECT"] = true;
+        conn = driver->connect(connection_properties);
+        
+        uv_key_set(&g_mysql_connection_key,conn);
+        uv_mutex_lock(&mutex_);        
+        mysql_connections_.push_back(conn);
+        uv_mutex_unlock(&mutex_);      
     }catch (sql::SQLException &e){
         std::cerr << "failed to connect mysql, error is "<<e.what()
-                  <<"mysql error code is "<<e.getErrorCode();
+                  <<"mysql error code is "<<e.getErrorCode()<<std::endl;
     }
     return conn;
 }

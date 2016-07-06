@@ -5,7 +5,7 @@
 #include <hiredis/async.h>
 #include <libuv/uv.h>
 #include <mysql_connection.h>
-
+#include <list>
 
 namespace dbproxy
 {
@@ -28,6 +28,8 @@ private:
     uv_loop_t *loop_;
     redisAsyncContext *redis_async_context_;
     uv_signal_t signal_handle_;
+    uv_mutex_t mutex_;
+    std::list<sql::Connection*> mysql_connections_;
 };
 
 }
