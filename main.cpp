@@ -14,7 +14,7 @@ void do_exit_clean(){
 }
 int main(int argc, char* argv[]){
     signal(SIGPIPE, SIG_IGN);
-    //signal(SIGINT, sig_handler);
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
     atexit(do_exit_clean);
     dbproxy::DBProxyServer::Instance()->Start(1080);
     return 0;

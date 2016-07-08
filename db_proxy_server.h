@@ -10,6 +10,14 @@
 namespace dbproxy
 {
 
+struct RedisConnection
+{
+    RedisConnection():context(NULL),is_connected(false){};
+    void Reset();
+    redisAsyncContext *context;
+    bool is_connected;
+};
+
 class DBProxyServer
 {
 public:
@@ -21,15 +29,18 @@ public:
     redisAsyncContext* GetRedisContext(const std::string& player_id);
     sql::Connection* GetMysqlConnection(const std::string& player_id);
     uv_loop_t* Loop(){return loop_;};
-
 private:
-    DBProxyServer():server_handle_(NULL),loop_(NULL),redis_async_context_(NULL){};    
+    DBProxyServer():server_handle_(NULL),loop_(NULL){};
+    void ConnectRedis();
+    static void RedisConnectCallback(const redisAsyncContext *context, int status);
+    static void RedisDisconnectCallback(const redisAsyncContext *context, int status);
+
     uv_tcp_t *server_handle_;
-    uv_loop_t *loop_;
-    redisAsyncContext *redis_async_context_;
+    uv_loop_t *loop_;   
     uv_signal_t signal_handle_;
     uv_mutex_t mutex_;
     std::list<sql::Connection*> mysql_connections_;
+    RedisConnection redis_connection_;
 };
 
 }

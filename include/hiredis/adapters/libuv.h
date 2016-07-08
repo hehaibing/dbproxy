@@ -17,6 +17,10 @@ static void redisLibuvPoll(uv_poll_t* handle, int status, int events) {
   redisLibuvEvents* p = (redisLibuvEvents*)handle->data;
 
   if (status != 0) {
+    if(!(p->context->c.flags & REDIS_CONNECTED)){
+        redisAsyncHandleWrite(p->context);      
+    }
+
     return;
   }
 

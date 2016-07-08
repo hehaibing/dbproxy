@@ -10,6 +10,7 @@ enum Command {
 }
 
 enum ErrorCode{
+    ERR_SUCCESS = 0;
     ERR_MESSAGE_FORMAT = 100;//消息报文格式不正确
     ERR_DB_EXCEPTION = 101;//数据库异常
     ERR_GET_NOT_FOUND = 200;//查找不到对应的记录
