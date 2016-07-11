@@ -69,11 +69,12 @@ enum ErrorCode {
   ERR_SUCCESS = 0,
   ERR_MESSAGE_FORMAT = 100,
   ERR_DB_EXCEPTION = 101,
-  ERR_GET_NOT_FOUND = 200
+  ERR_GET_NOT_FOUND = 200,
+  ERR_SET_REDIS_FAILED = 201
 };
 bool ErrorCode_IsValid(int value);
 const ErrorCode ErrorCode_MIN = ERR_SUCCESS;
-const ErrorCode ErrorCode_MAX = ERR_GET_NOT_FOUND;
+const ErrorCode ErrorCode_MAX = ERR_SET_REDIS_FAILED;
 const int ErrorCode_ARRAYSIZE = ErrorCode_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* ErrorCode_descriptor();

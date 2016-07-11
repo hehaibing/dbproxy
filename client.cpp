@@ -4,7 +4,9 @@
 
 #include "client.h"
 #include "db_get.h"
+#include "db_set.h"
 #include "db_proxy_server.h"
+#include "proto/dbproxy.pb.h"
 
 namespace dbproxy{
 
@@ -53,7 +55,11 @@ void Client::ProcessReaded(){
         return;
     }
     msg->head.content_len = input_msg_len;
-    DBGet::Process(msg,this);
+    if(msg->head.cmd == CMD_GET_REQ){
+        DBGet::Process(msg,this);        
+    } else if(msg->head.cmd == CMD_SET_REQ){
+        DBSet::Process(msg,this);
+    }
     alread_readed_num_ = 0;
 }
 

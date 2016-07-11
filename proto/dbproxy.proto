@@ -14,6 +14,7 @@ enum ErrorCode{
     ERR_MESSAGE_FORMAT = 100;//消息报文格式不正确
     ERR_DB_EXCEPTION = 101;//数据库异常
     ERR_GET_NOT_FOUND = 200;//查找不到对应的记录
+    ERR_SET_REDIS_FAILED = 201;//Redis数据库保存失败
 }
 
 message PackageHead {

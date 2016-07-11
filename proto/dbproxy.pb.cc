@@ -237,9 +237,10 @@ void protobuf_AddDesc_dbproxy_2eproto() {
     "\025\n\rerror_message\030\002 \001(\t*r\n\007Command\022\017\n\013CMD"
     "_GET_REQ\020d\022\020\n\014CMD_GET_RESP\020e\022\017\n\013CMD_SET_"
     "REQ\020f\022\020\n\014CMD_SET_RESP\020g\022\017\n\013CMD_DEL_REQ\020h"
-    "\022\020\n\014CMD_DEL_RESP\020i*b\n\tErrorCode\022\017\n\013ERR_S"
+    "\022\020\n\014CMD_DEL_RESP\020i*}\n\tErrorCode\022\017\n\013ERR_S"
     "UCCESS\020\000\022\026\n\022ERR_MESSAGE_FORMAT\020d\022\024\n\020ERR_"
-    "DB_EXCEPTION\020e\022\026\n\021ERR_GET_NOT_FOUND\020\310\001", 638);
+    "DB_EXCEPTION\020e\022\026\n\021ERR_GET_NOT_FOUND\020\310\001\022\031"
+    "\n\024ERR_SET_REDIS_FAILED\020\311\001", 665);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "dbproxy.proto", &protobuf_RegisterTypes);
   PackageHead::default_instance_ = new PackageHead();
@@ -293,6 +294,7 @@ bool ErrorCode_IsValid(int value) {
     case 100:
     case 101:
     case 200:
+    case 201:
       return true;
     default:
       return false;

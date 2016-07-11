@@ -75,7 +75,6 @@ void DBGet::SetRedisCallback(redisAsyncContext *context, void *reply, void *priv
 
 //important!! execute in diffent thread
 void DBGet::QueryMysql(uv_work_t *work_handle){
-    printf("query from mysql \n");
     DBGetCommand* command = (DBGetCommand*) work_handle->data;
     sql::Connection* conn = DBProxyServer::Instance()->GetMysqlConnection(command->player_id);
     if(conn == NULL){
