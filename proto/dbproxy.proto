@@ -38,7 +38,7 @@ message GetResp {
 message SetReq {
     required string player_id = 1;
     required string prop_name = 2;
-    required string prop_value = 3;
+    required bytes prop_value = 3;
 }
 
 message SetResp {

@@ -37,10 +37,13 @@ public:
     static void CloseCallback(uv_handle_t *handle);
 
 private:
+    void CloseHandle();
     uv_tcp_t* handle_;
     char* read_buf_;
     int read_buf_len_;
     int alread_readed_num_;
+    bool need_close_;
+    int command_count_;
 };
 }
 #endif //__DBPROXY_COMMON_H_

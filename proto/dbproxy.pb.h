@@ -483,14 +483,14 @@ class SetReq : public ::google::protobuf::Message {
   inline ::std::string* release_prop_name();
   inline void set_allocated_prop_name(::std::string* prop_name);
 
-  // required string prop_value = 3;
+  // required bytes prop_value = 3;
   inline bool has_prop_value() const;
   inline void clear_prop_value();
   static const int kPropValueFieldNumber = 3;
   inline const ::std::string& prop_value() const;
   inline void set_prop_value(const ::std::string& value);
   inline void set_prop_value(const char* value);
-  inline void set_prop_value(const char* value, size_t size);
+  inline void set_prop_value(const void* value, size_t size);
   inline ::std::string* mutable_prop_value();
   inline ::std::string* release_prop_value();
   inline void set_allocated_prop_value(::std::string* prop_value);
@@ -1343,7 +1343,7 @@ inline void SetReq::set_allocated_prop_name(::std::string* prop_name) {
   }
 }
 
-// required string prop_value = 3;
+// required bytes prop_value = 3;
 inline bool SetReq::has_prop_value() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
@@ -1376,7 +1376,7 @@ inline void SetReq::set_prop_value(const char* value) {
   }
   prop_value_->assign(value);
 }
-inline void SetReq::set_prop_value(const char* value, size_t size) {
+inline void SetReq::set_prop_value(const void* value, size_t size) {
   set_has_prop_value();
   if (prop_value_ == &::google::protobuf::internal::kEmptyString) {
     prop_value_ = new ::std::string;

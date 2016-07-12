@@ -230,7 +230,7 @@ void protobuf_AddDesc_dbproxy_2eproto() {
     "\tprop_name\030\002 \002(\t\"@\n\007GetResp\022\020\n\010ret_code\030"
     "\001 \002(\005\022\014\n\004data\030\002 \001(\014\022\025\n\rerror_message\030\003 \001"
     "(\t\"B\n\006SetReq\022\021\n\tplayer_id\030\001 \002(\t\022\021\n\tprop_"
-    "name\030\002 \002(\t\022\022\n\nprop_value\030\003 \002(\t\"2\n\007SetRes"
+    "name\030\002 \002(\t\022\022\n\nprop_value\030\003 \002(\014\"2\n\007SetRes"
     "p\022\020\n\010ret_code\030\001 \002(\005\022\025\n\rerror_message\030\002 \001"
     "(\t\".\n\006DelReq\022\021\n\tplayer_id\030\001 \002(\t\022\021\n\tprop_"
     "name\030\002 \002(\t\"2\n\007DelResp\022\020\n\010ret_code\030\001 \002(\005\022"
@@ -1318,16 +1318,13 @@ bool SetReq::MergePartialFromCodedStream(
         break;
       }
 
-      // required string prop_value = 3;
+      // required bytes prop_value = 3;
       case 3: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_prop_value:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
                 input, this->mutable_prop_value()));
-          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-            this->prop_value().data(), this->prop_value().length(),
-            ::google::protobuf::internal::WireFormat::PARSE);
         } else {
           goto handle_uninterpreted;
         }
@@ -1371,12 +1368,9 @@ void SetReq::SerializeWithCachedSizes(
       2, this->prop_name(), output);
   }
 
-  // required string prop_value = 3;
+  // required bytes prop_value = 3;
   if (has_prop_value()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-      this->prop_value().data(), this->prop_value().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE);
-    ::google::protobuf::internal::WireFormatLite::WriteString(
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
       3, this->prop_value(), output);
   }
 
@@ -1408,13 +1402,10 @@ void SetReq::SerializeWithCachedSizes(
         2, this->prop_name(), target);
   }
 
-  // required string prop_value = 3;
+  // required bytes prop_value = 3;
   if (has_prop_value()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-      this->prop_value().data(), this->prop_value().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE);
     target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
         3, this->prop_value(), target);
   }
 
@@ -1443,10 +1434,10 @@ int SetReq::ByteSize() const {
           this->prop_name());
     }
 
-    // required string prop_value = 3;
+    // required bytes prop_value = 3;
     if (has_prop_value()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
           this->prop_value());
     }
 

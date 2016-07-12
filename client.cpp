@@ -17,7 +17,10 @@ Client::Client()
     :handle_(NULL)
     ,read_buf_(NULL)
     ,read_buf_len_(0)
-    ,alread_readed_num_(0){
+    ,alread_readed_num_(0)
+    ,need_close_(false),
+    ,command_count_(0)
+    {
 }
 
 Client::~Client(){
@@ -42,25 +45,40 @@ void Client::ProcessReaded(){
     if(alread_readed_num_ < sizeof(MessageHeader)){
         return;
     }
-    Message* msg = (Message*)read_buf_;
-    uint32_t input_msg_len = ntohl(msg->head.content_len);
-    
-    if(input_msg_len > MAX_READ_BUF_LEN){
-        handle_->data = this;
-        uv_close((uv_handle_t*)handle_,Client::CloseCallback);
+    if(need_close_){
         return;
     }
 
-    if(alread_readed_num_ < input_msg_len + sizeof(MessageHeader)){
-        return;
+    int32_t decode_pos = 0;
+    while(decode_pos + sizeof(MessageHeader) <= alread_readed_num_){        
+        Message* msg = (Message*)(read_buf_ + decode_pos);
+        uint32_t input_msg_len = ntohl(msg->head.content_len);
+        printf("decode_pos is %d, alread_readed_num_ = %d, msg len is %u\n", decode_pos,alread_readed_num_,input_msg_len);
+        if(input_msg_len > MAX_READ_BUF_LEN){
+            handle_->data = this;
+            printf("begin to close socket as len is too large,input_msg_len = %u\n",input_msg_len);
+            need_close_ = true;            
+            return;
+        }
+
+        if((alread_readed_num_ - decode_pos) < input_msg_len + sizeof(MessageHeader)){
+            break;
+        }
+
+        msg->head.content_len = input_msg_len;
+        if(msg->head.cmd == CMD_GET_REQ){
+            DBGet::Process(msg,this);        
+        } else if(msg->head.cmd == CMD_SET_REQ){
+            DBSet::Process(msg,this);
+        }
+        decode_pos += input_msg_len + sizeof(MessageHeader);        
     }
-    msg->head.content_len = input_msg_len;
-    if(msg->head.cmd == CMD_GET_REQ){
-        DBGet::Process(msg,this);        
-    } else if(msg->head.cmd == CMD_SET_REQ){
-        DBSet::Process(msg,this);
-    }
-    alread_readed_num_ = 0;
+
+    alread_readed_num_ -= decode_pos;
+    if(decode_pos > 0 && alread_readed_num_ > 0) {        
+        memmove(read_buf_,read_buf_+decode_pos,alread_readed_num_);
+        printf("memmove decode_pos is %d, alread_readed_num_ = %d\n", decode_pos,alread_readed_num_);
+    } 
 }
 
 void Client::AllocReadBuffer(size_t suggested_size, uv_buf_t* buf){
@@ -104,7 +122,7 @@ void Client::ReadCallback(uv_stream_t *client_handle, ssize_t read_num, const uv
         if(read_num != UV_EOF){
             fprintf(stderr, "read error, %s\n", uv_strerror(read_num));
         }
-        uv_close((uv_handle_t*)client_handle,Client::CloseCallback);
+        need_close_ = true;
         return;
     }
 
@@ -114,6 +132,10 @@ void Client::ReadCallback(uv_stream_t *client_handle, ssize_t read_num, const uv
 }
 
 void Client::WriteCallback(uv_write_t* req, int status){
+    if(status != 0){
+        printf("write failed\n");
+        need_close_ = true;
+    }
     if(req != NULL){
         free(req->data);
         free(req);
@@ -142,4 +164,9 @@ void Client::CloseCallback(uv_handle_t* handle){
     free(handle);
 }
 
+void Client::CloseHandle(){
+    if(need_close_ && command_count_ == 0){
+        
+    }
+}
 }

@@ -96,6 +96,7 @@ void DBSet::InsertMysql(uv_work_t *work_handle){
         ps->setString(2,command->prop_name);
         ps->setString(3,command->prop_value);
         ps->execute();
+        printf("execute sql %s\n", command->player_id.c_str());
         command->insert_result = DBSetCommand::SUCCESS;
     }catch(sql::SQLException& e){
         command->insert_result = DBSetCommand::FAILED;
@@ -106,6 +107,7 @@ void DBSet::InsertMysql(uv_work_t *work_handle){
 
 void DBSet::InsertMysqlCallback(uv_work_t *work_handle, int status){
     //ignore
+    printf("dbset execute status is %d\n",status);
 }
 
 }
