@@ -7,6 +7,7 @@ enum Command {
     CMD_SET_RESP = 103;
     CMD_DEL_REQ = 104;
     CMD_DEL_RESP = 105;
+    CMD_OTHER_RESP = 200;
 }
 
 enum ErrorCode{
@@ -19,8 +20,8 @@ enum ErrorCode{
 
 message PackageHead {
     required uint32 content_length = 1;//内容长度，不包括消息头长度(网络字节序)
-    required uint32 sn = 2;//请求序列号，返回响应时会带上此序列号
-    required uint32 cmd = 3;//消息类型
+    required uint32 sn = 2;//请求序列号，返回响应时会带上此序列号(不考虑网络字节序)
+    required uint32 cmd = 3;//消息类型,(1字节长)
 }
 
 

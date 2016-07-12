@@ -67,13 +67,16 @@ void Client::ProcessReaded(){
         }
 
         msg->head.content_len = input_msg_len;
-        if(msg->head.cmd == CMD_GET_REQ){
-            command_count_ ++;
+        command_count_ ++;
+
+        if(msg->head.cmd == CMD_GET_REQ){            
             DBGet::Process(msg,this);
         } else if(msg->head.cmd == CMD_SET_REQ){
-            command_count_ ++;
             DBSet::Process(msg,this);
+        }else{
+            Response(CMD_OTHER_RESP,msg->head.sn,"Unkown command");
         }
+        
         decode_pos += input_msg_len + sizeof(MessageHeader);        
     }
 

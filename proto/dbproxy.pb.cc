@@ -226,7 +226,7 @@ void protobuf_AddDesc_dbproxy_2eproto() {
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
     "\n\rdbproxy.proto\022\007dbproxy\">\n\013PackageHead\022"
     "\026\n\016content_length\030\001 \002(\r\022\n\n\002sn\030\002 \002(\r\022\013\n\003c"
-    "md\030\003 \002(\r\".\n\006GetReq\022\021\n\tplayer_id\030\001 \002(\t\022\021\n"
+    "md\030\003 \002(\014\".\n\006GetReq\022\021\n\tplayer_id\030\001 \002(\t\022\021\n"
     "\tprop_name\030\002 \002(\t\"@\n\007GetResp\022\020\n\010ret_code\030"
     "\001 \002(\005\022\014\n\004data\030\002 \001(\014\022\025\n\rerror_message\030\003 \001"
     "(\t\"B\n\006SetReq\022\021\n\tplayer_id\030\001 \002(\t\022\021\n\tprop_"
@@ -234,13 +234,14 @@ void protobuf_AddDesc_dbproxy_2eproto() {
     "p\022\020\n\010ret_code\030\001 \002(\005\022\025\n\rerror_message\030\002 \001"
     "(\t\".\n\006DelReq\022\021\n\tplayer_id\030\001 \002(\t\022\021\n\tprop_"
     "name\030\002 \002(\t\"2\n\007DelResp\022\020\n\010ret_code\030\001 \002(\005\022"
-    "\025\n\rerror_message\030\002 \001(\t*r\n\007Command\022\017\n\013CMD"
-    "_GET_REQ\020d\022\020\n\014CMD_GET_RESP\020e\022\017\n\013CMD_SET_"
-    "REQ\020f\022\020\n\014CMD_SET_RESP\020g\022\017\n\013CMD_DEL_REQ\020h"
-    "\022\020\n\014CMD_DEL_RESP\020i*}\n\tErrorCode\022\017\n\013ERR_S"
-    "UCCESS\020\000\022\026\n\022ERR_MESSAGE_FORMAT\020d\022\024\n\020ERR_"
-    "DB_EXCEPTION\020e\022\026\n\021ERR_GET_NOT_FOUND\020\310\001\022\031"
-    "\n\024ERR_SET_REDIS_FAILED\020\311\001", 665);
+    "\025\n\rerror_message\030\002 \001(\t*\207\001\n\007Command\022\017\n\013CM"
+    "D_GET_REQ\020d\022\020\n\014CMD_GET_RESP\020e\022\017\n\013CMD_SET"
+    "_REQ\020f\022\020\n\014CMD_SET_RESP\020g\022\017\n\013CMD_DEL_REQ\020"
+    "h\022\020\n\014CMD_DEL_RESP\020i\022\023\n\016CMD_OTHER_RESP\020\310\001"
+    "*}\n\tErrorCode\022\017\n\013ERR_SUCCESS\020\000\022\026\n\022ERR_ME"
+    "SSAGE_FORMAT\020d\022\024\n\020ERR_DB_EXCEPTION\020e\022\026\n\021"
+    "ERR_GET_NOT_FOUND\020\310\001\022\031\n\024ERR_SET_REDIS_FA"
+    "ILED\020\311\001", 687);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "dbproxy.proto", &protobuf_RegisterTypes);
   PackageHead::default_instance_ = new PackageHead();
@@ -278,6 +279,7 @@ bool Command_IsValid(int value) {
     case 103:
     case 104:
     case 105:
+    case 200:
       return true;
     default:
       return false;
@@ -328,7 +330,7 @@ void PackageHead::SharedCtor() {
   _cached_size_ = 0;
   content_length_ = 0u;
   sn_ = 0u;
-  cmd_ = 0u;
+  cmd_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -337,6 +339,9 @@ PackageHead::~PackageHead() {
 }
 
 void PackageHead::SharedDtor() {
+  if (cmd_ != &::google::protobuf::internal::kEmptyString) {
+    delete cmd_;
+  }
   if (this != default_instance_) {
   }
 }
@@ -366,7 +371,11 @@ void PackageHead::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     content_length_ = 0u;
     sn_ = 0u;
-    cmd_ = 0u;
+    if (has_cmd()) {
+      if (cmd_ != &::google::protobuf::internal::kEmptyString) {
+        cmd_->clear();
+      }
+    }
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
@@ -405,19 +414,17 @@ bool PackageHead::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(24)) goto parse_cmd;
+        if (input->ExpectTag(26)) goto parse_cmd;
         break;
       }
 
-      // required uint32 cmd = 3;
+      // required bytes cmd = 3;
       case 3: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_cmd:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
-                 input, &cmd_)));
-          set_has_cmd();
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_cmd()));
         } else {
           goto handle_uninterpreted;
         }
@@ -453,9 +460,10 @@ void PackageHead::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt32(2, this->sn(), output);
   }
 
-  // required uint32 cmd = 3;
+  // required bytes cmd = 3;
   if (has_cmd()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(3, this->cmd(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      3, this->cmd(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -476,9 +484,11 @@ void PackageHead::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(2, this->sn(), target);
   }
 
-  // required uint32 cmd = 3;
+  // required bytes cmd = 3;
   if (has_cmd()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(3, this->cmd(), target);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+        3, this->cmd(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -506,10 +516,10 @@ int PackageHead::ByteSize() const {
           this->sn());
     }
 
-    // required uint32 cmd = 3;
+    // required bytes cmd = 3;
     if (has_cmd()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
           this->cmd());
     }
 

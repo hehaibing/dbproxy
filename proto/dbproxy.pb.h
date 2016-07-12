@@ -48,11 +48,12 @@ enum Command {
   CMD_SET_REQ = 102,
   CMD_SET_RESP = 103,
   CMD_DEL_REQ = 104,
-  CMD_DEL_RESP = 105
+  CMD_DEL_RESP = 105,
+  CMD_OTHER_RESP = 200
 };
 bool Command_IsValid(int value);
 const Command Command_MIN = CMD_GET_REQ;
-const Command Command_MAX = CMD_DEL_RESP;
+const Command Command_MAX = CMD_OTHER_RESP;
 const int Command_ARRAYSIZE = Command_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* Command_descriptor();
@@ -157,12 +158,17 @@ class PackageHead : public ::google::protobuf::Message {
   inline ::google::protobuf::uint32 sn() const;
   inline void set_sn(::google::protobuf::uint32 value);
 
-  // required uint32 cmd = 3;
+  // required bytes cmd = 3;
   inline bool has_cmd() const;
   inline void clear_cmd();
   static const int kCmdFieldNumber = 3;
-  inline ::google::protobuf::uint32 cmd() const;
-  inline void set_cmd(::google::protobuf::uint32 value);
+  inline const ::std::string& cmd() const;
+  inline void set_cmd(const ::std::string& value);
+  inline void set_cmd(const char* value);
+  inline void set_cmd(const void* value, size_t size);
+  inline ::std::string* mutable_cmd();
+  inline ::std::string* release_cmd();
+  inline void set_allocated_cmd(::std::string* cmd);
 
   // @@protoc_insertion_point(class_scope:dbproxy.PackageHead)
  private:
@@ -177,7 +183,7 @@ class PackageHead : public ::google::protobuf::Message {
 
   ::google::protobuf::uint32 content_length_;
   ::google::protobuf::uint32 sn_;
-  ::google::protobuf::uint32 cmd_;
+  ::std::string* cmd_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
@@ -867,7 +873,7 @@ inline void PackageHead::set_sn(::google::protobuf::uint32 value) {
   sn_ = value;
 }
 
-// required uint32 cmd = 3;
+// required bytes cmd = 3;
 inline bool PackageHead::has_cmd() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
@@ -878,15 +884,63 @@ inline void PackageHead::clear_has_cmd() {
   _has_bits_[0] &= ~0x00000004u;
 }
 inline void PackageHead::clear_cmd() {
-  cmd_ = 0u;
+  if (cmd_ != &::google::protobuf::internal::kEmptyString) {
+    cmd_->clear();
+  }
   clear_has_cmd();
 }
-inline ::google::protobuf::uint32 PackageHead::cmd() const {
+inline const ::std::string& PackageHead::cmd() const {
+  return *cmd_;
+}
+inline void PackageHead::set_cmd(const ::std::string& value) {
+  set_has_cmd();
+  if (cmd_ == &::google::protobuf::internal::kEmptyString) {
+    cmd_ = new ::std::string;
+  }
+  cmd_->assign(value);
+}
+inline void PackageHead::set_cmd(const char* value) {
+  set_has_cmd();
+  if (cmd_ == &::google::protobuf::internal::kEmptyString) {
+    cmd_ = new ::std::string;
+  }
+  cmd_->assign(value);
+}
+inline void PackageHead::set_cmd(const void* value, size_t size) {
+  set_has_cmd();
+  if (cmd_ == &::google::protobuf::internal::kEmptyString) {
+    cmd_ = new ::std::string;
+  }
+  cmd_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* PackageHead::mutable_cmd() {
+  set_has_cmd();
+  if (cmd_ == &::google::protobuf::internal::kEmptyString) {
+    cmd_ = new ::std::string;
+  }
   return cmd_;
 }
-inline void PackageHead::set_cmd(::google::protobuf::uint32 value) {
-  set_has_cmd();
-  cmd_ = value;
+inline ::std::string* PackageHead::release_cmd() {
+  clear_has_cmd();
+  if (cmd_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = cmd_;
+    cmd_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void PackageHead::set_allocated_cmd(::std::string* cmd) {
+  if (cmd_ != &::google::protobuf::internal::kEmptyString) {
+    delete cmd_;
+  }
+  if (cmd) {
+    set_has_cmd();
+    cmd_ = cmd;
+  } else {
+    clear_has_cmd();
+    cmd_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
 }
 
 // -------------------------------------------------------------------
