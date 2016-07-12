@@ -11,14 +11,14 @@
 namespace dbproxy{
 
 const int READ_BUF_LEN = 1024;
-const uint32_t MAX_READ_BUF_LEN = 1024*1024;
+const uint32_t MAX_MESSAGE_LEN = 1024*1024;
 
 Client::Client()
     :handle_(NULL)
     ,read_buf_(NULL)
     ,read_buf_len_(0)
     ,alread_readed_num_(0)
-    ,need_close_(false),
+    ,need_close_(false)
     ,command_count_(0)
     {
 }
@@ -36,6 +36,7 @@ void Client::Init(uv_tcp_t* handle){
     if(read_buf_ != NULL){
         free(read_buf_);
     }
+
     read_buf_ = (char*)malloc(READ_BUF_LEN);
     read_buf_len_ = READ_BUF_LEN;
     alread_readed_num_ = 0;
@@ -54,10 +55,10 @@ void Client::ProcessReaded(){
         Message* msg = (Message*)(read_buf_ + decode_pos);
         uint32_t input_msg_len = ntohl(msg->head.content_len);
         printf("decode_pos is %d, alread_readed_num_ = %d, msg len is %u\n", decode_pos,alread_readed_num_,input_msg_len);
-        if(input_msg_len > MAX_READ_BUF_LEN){
+        if(input_msg_len > MAX_MESSAGE_LEN){
             handle_->data = this;
             printf("begin to close socket as len is too large,input_msg_len = %u\n",input_msg_len);
-            need_close_ = true;            
+            CloseHandle();
             return;
         }
 
@@ -67,8 +68,10 @@ void Client::ProcessReaded(){
 
         msg->head.content_len = input_msg_len;
         if(msg->head.cmd == CMD_GET_REQ){
-            DBGet::Process(msg,this);        
+            command_count_ ++;
+            DBGet::Process(msg,this);
         } else if(msg->head.cmd == CMD_SET_REQ){
+            command_count_ ++;
             DBSet::Process(msg,this);
         }
         decode_pos += input_msg_len + sizeof(MessageHeader);        
@@ -118,24 +121,25 @@ void Client::OnAllocReadBuffer(uv_handle_t *handle, size_t suggested_size, uv_bu
 }
 
 void Client::ReadCallback(uv_stream_t *client_handle, ssize_t read_num, const uv_buf_t *buf){
+    Client* client = (Client*)client_handle->data;
     if(read_num < 0){
         if(read_num != UV_EOF){
             fprintf(stderr, "read error, %s\n", uv_strerror(read_num));
         }
-        need_close_ = true;
+        client->CloseHandle();
         return;
     }
 
-    Client* client = (Client*)client_handle->data;
     client->alread_readed_num_ += read_num;
     client->ProcessReaded();
 }
 
 void Client::WriteCallback(uv_write_t* req, int status){
+    Client* client = (Client*)req->handle->data;
     if(status != 0){
-        printf("write failed\n");
-        need_close_ = true;
+        client->CloseHandle();
     }
+
     if(req != NULL){
         free(req->data);
         free(req);
@@ -143,6 +147,12 @@ void Client::WriteCallback(uv_write_t* req, int status){
 }
 
 void Client::Response(uint32_t cmd, uint32_t sn, const std::string& content){
+    command_count_ --;
+    if(need_close_){
+        CloseHandle();
+        return;
+    }
+
     uint32_t msg_len = content.length()+sizeof(MessageHeader);
     Message* msg = (Message*)malloc(msg_len);
     msg->head.content_len = htonl(content.length());
@@ -165,8 +175,10 @@ void Client::CloseCallback(uv_handle_t* handle){
 }
 
 void Client::CloseHandle(){
-    if(need_close_ && command_count_ == 0){
-        
+    if(command_count_ == 0){
+        uv_close((uv_handle_t*) handle_,CloseCallback);
+        handle_ = NULL;
     }
+    need_close_ = true;
 }
 }
