@@ -22,4 +22,4 @@ yum install -y boost-devel
 
 git clone https://github.com/hehaibing/dbproxy.git
 
-g++ -o dbproxy *.cpp proto/*.cc -Iinclude -Llibs/linux -luv -lhiredis -lpthread -lmysqlcppconn -lprotobuf
+`g++ -o dbproxy *.cpp proto/*.cc -Iinclude -Llibs/linux -luv -lhiredis -lpthread -lmysqlcppconn -lprotobuf`
